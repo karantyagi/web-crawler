@@ -1,0 +1,6 @@
+
+# bfs_crawler.py: 4
+beautifulsoup4 == 4.6.0
+
+# bfs_crawler.py: 3
+requests == 2.18.4
