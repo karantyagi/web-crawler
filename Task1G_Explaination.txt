@@ -1,0 +1,27 @@
+Comparing results of BFS and DFS crawl:
+
+ - Both BFS and DFS crawled 1000 urls.
+ - 61 URLs were common to both, so 6.1% overlap
+
+ - Perceived quality and efficiency:
+   BFS seems to give a much better search result (high quality as compared to DFS search tree) related to the        seed query as logically the pages seem to be closely related. We find concepts related to eclipses, moons, and    more so are in the domain in and around eclipses in majority of the links.
+   
+   BFS is seemingly more efficient than DFS in terms of topic coverage and and url quality. 
+   
+   DFS on the other hand diverges very quickly from the crawl topic into the realm of physics, then to scientists    to philosophy to space and astronomy domain. Divergenec is too much, unrelated topics occur very    frequently    in DFS, whereas BFS, we find topics that are logically more close to solar eclipse like geographic terms,    solar, lunar, eclipses etc 
+
+   BFS seems to be more efficient as the time taken by BFS was much less than DFS {when no pages were downloaded     and only urls were crawled and stored in a file; also the requests made to server in such a case were vrey few    in case of BFS as compared to DFS}
+
+ - Coverage of topic : 'solar eclipse'
+   BFS performs much better than DFS as far as coverage of topic is concerned.
+   
+   Consider the data:
+
+   Keyword Count (BFS crawl)           |      Keyword Count (DFS crawl) 
+   'Solar'         |     543           |      'Solar'         |     15
+   'eclipse'       |     468           |      'eclipse'       |     1 
+   'Solar_eclipse' |     457           |      'Solar_eclipse' |     0 
+
+   Considering these statistics it shows there are hardly any URLs discovered by DFS which are related to solar      eclipses whereas nearly 50% of the urls discovered by BFS are related closely to the topic given.
+
+

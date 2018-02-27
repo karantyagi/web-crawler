@@ -1,0 +1,17 @@
+Focused Crawling
+
+The difference between BFS crawl and focused BFS crawl is that finding neighbours of a node we process only the valid nodes.
+A valid node must have a valid URL. While checking  the validity of a url we make use of focused search using keywords. We only crawl the url if it has one or more of the keywords given in the keyword list.
+
+Handling keyword variations
+
+I have considered the search to be a graph search.
+Each node or webpage is represented as a Python list : ['url',level]
+where 'url' is a string containing the url of the webpage and level specifies its level in the BFS search tree.(as focused crawling uses BFS crawl)
+
+While finding valid URLs on a webpage, I checked if any of the given keywords was a part of the url string, only then was a url considered valid.
+
+To handle case variations I converted both, the keywords and url string to lower case. So even if the user gives the keyword as Moon, or moon or MOON, presence of any of the variations of moon will be considered valid.
+
+For other variations like moon_light etc , as I am checking whether moon is a substring of the url string.
+'moon' is a substring of 'moon_light' so any url containing 'moon_light' will be considered valid as 'moon' is a substring of that url. Similarily I am able to find valid urls which contains keyword variations like 'Moon_Landing', 'honeymoons' etc as they have the keyword 'moon' in them. 
