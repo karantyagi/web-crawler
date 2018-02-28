@@ -171,7 +171,7 @@ def write_pages_to_file(list):
     i=1
     for element in list:
         f.write(('Webpage {} :'.format(i).ljust(15)
-        +str(element[0]).split('/wiki')[-1].ljust(75)
+        +str(element[0]).split('/wiki/')[-1].ljust(75)
         +'Level : {}'.format(element[1])+'\n'))
         i+=1
     f.close()
