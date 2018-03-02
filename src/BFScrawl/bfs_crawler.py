@@ -1,39 +1,24 @@
 # -------------------------------------------------------------------------
-# Note : The download function is commented out in the main function.
-# To download the 1000 webpages, please uncomment it.
+# Note : The downloading the fetched file before crawling functionality is
+# commented out. To download the 1000 webpages, please uncomment it.
 # -------------------------------------------------------------------------
 
-'''
-Incorrect implementation of BFS -> -5
-You need to crawl 1000 pages. You shouldn't stop when the frontier has 1000 links on it.
-
-[TA] Doubt (read prev assignment) - Do we include seed page too in our documents ?
-[TA] When to download page ? after it has been crawled ??
-download the webpage after it has been crawled or just after fetching it ??
-
-IF urls or pages' info is not being shown on screen then show time.. or a
-progress bar, don't test TA's patience
-
-Link 1 - webgraph ?? and for previous assignment ? do we include or omit seed
-
-'''
 # importing dependencies
 
 import os
 import time
 import requests
+import pprint
 from bs4 import BeautifulSoup
 
 # -------------------------------------------------------------------------
-# Constants required for Crawling an Ranking
-
-DELAY = 1.1    # Time delay for implementing politeness policy
-
+# Constants required for Crawling and Ranking
+DELAY = 1.2    # Time delay for implementing politeness policy
 # -------------------------------------------------------------------------
 
 # global variables -----------------------------------------------------------
 # crawled_urls = []
-
+webgraph = {}
 
 # -------------------------------------------------------------------------
 # Helper functions
@@ -93,26 +78,18 @@ def valid_URL(url_string):
 # Returns : true iff it the given string is present in the
 def present(s,list):
     result = False
-    # .lower() handels the following SPECIAL case
+    # .lower() handels the following SPECIAL case - This is the redirects case - ALREADY HANDLED
     # https://en.wikipedia.org/wiki/Full_Moon and https://en.wikipedia.org/wiki/full_Moon
     # refer to same page
     # if we conside the split part after '/wiki', Full_Moon and full_Moon both
     # refer to the same link and hence must be treated as same.
     # Full_moon page is same as full_moon
     for page in list:
-        if (str(page[0]).lower() == s.lower()):
+        if str(page[0]) == s:
             result = True
             # duplicate hence skip it
             break
     return result
-
-# -------------------------------------------------------------------------
-
-def createPathIfNotExists(path):
-    dir = os.path.dirname(path)
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-
 
 # -------------------------------------------------------------------------
 
@@ -150,8 +127,8 @@ def download_urls(list):
 # Given   :  list of nodes where node is a list ['url', level]
 # Effect  :  writes the string url of all the nodes in the list to a text file
 def write_urls_to_file(webpage_list):
-    createPathIfNotExists('../savedDocs/')
-    fileName = "../URL_list(BFS).txt"
+    #createPathIfNotExists('../savedDocs/')
+    fileName = "URL_list(BFS).txt"
     f= open(fileName,'w')
     i=0
     for webpage in webpage_list:
@@ -179,6 +156,35 @@ def write_pages_to_file(list):
     print('\n\tTotal no. of crawled URLs : {} '.format(i-1))
 # ----------------------------------------------------------------------------
 
+def print_webgraph():
+    #pprint.pprint(webgraph, width=2)
+
+    print('\n===============================================================')
+    '''for key, value in webgraph.items() :
+        print("  {}".format(key).ljust(40),value)
+    print('\n================================================================')
+    '''
+    print("\n\t  Web Graph Stats")
+    print('\n\t# of unique keys',len(webgraph))
+
+# -----------------------------------------------------------------------------
+
+# Given   :
+# Effect  :
+def write_graph_to_file():
+    f= open('G1.txt','w')
+    i=1
+    for key,value in webgraph.items():
+        f.write(key)
+        for inlink in value:
+            f.write(" "+inlink)
+        f.write("\n")
+        i+=1
+    f.close()
+    print('\n\tKeys added to file : G1.txt')
+    print('\n\t# of keys : {} '.format(i-1))
+# ----------------------------------------------------------------------------
+
 '''
 In the implementation of BFS and DFS you have to crawl 1000 pages.
 In order to crawl a page, you need to make a request to the page and fetch
@@ -190,6 +196,9 @@ crawled in the future but not yet crawled
 #             which can be crawled by BFS crawler.
 # Returns : crawled nodes that are crawled by the focused crawler
 def bfs_crawler(seed,max_links,max_level):
+
+    global webgraph
+
     # add seed to Frontier (aka request queue)
     # Frontier is a list of webpages which need to be visited in the future
     frontier = [[seed,1]]  # Seed webpage : seed url and its level {seed at level 1}
@@ -203,14 +212,28 @@ def bfs_crawler(seed,max_links,max_level):
         # wepage is a list [url,level]
         # process this webpages
 
-        # check if alreay crawled/seen/visited/processed, then don't
-        # process/fetch it,  pop it and move to next page in the frontier
-        if (present(webpage[0],crawled_pages)):
-            frontier.pop(0)   # popping this webpage as it has already been crawled
-            continue          # continue to next page in the frontier
+        #  Fetch it and check (after checking for redirects) if already
+        # crawled/seen/visited/processed, then don't process it further
+        # and pop it and move to next page in the frontier
 
         # 1. Fetch it
-        page = requests.get(str(webpage[0]),stream=True)  # url from webpage
+        page = requests.get(str(webpage[0]))  # url from node
+        webpage[0] = page.url  # base url , even if the page is redirected we end
+                            # up at this url (base url)
+        # check for redirect
+        # if history is 0, it means it is base page
+        # otherwise it means this page was redirected to a base page
+        if (len(page.history)>0):
+            # check if it is redirecting to an already crawled page
+            if (present(webpage[0],crawled_pages)):
+                frontier.pop(0)   # popping this webpage as it has already been crawled
+                continue          # continue to next page in the frontier
+        else:  # it is a base page
+            # check if this base page has already been crawled
+            if (present(webpage[0],crawled_pages)):
+                frontier.pop(0)   # popping this webpage as it has already been crawled
+                continue          # continue to next page in the frontier
+
         #2. Parse it
         parsed_page = BeautifulSoup(page.text, 'html.parser')
 
@@ -223,8 +246,14 @@ def bfs_crawler(seed,max_links,max_level):
         +': {}'.format(crawled_pages[len(crawled_pages)-1][0].split('/wiki/')[-1]).ljust(75)
         +'Level : {}'.format(crawled_pages[len(crawled_pages)-1][1]).ljust(18)))
 
+        docID = str(webpage[0]).split('/wiki/')[-1]
+
+        if docID not in webgraph:
+            webgraph[docID] = []
+
         # 4. download the webpage after it has been crawled
-        download_webpage(str(webpage[0]),page)
+        ##### download_webpage(str(webpage[0]),page)
+
 
         if crawled_pages[len(crawled_pages)-1][1] > max_level:
             print("max-depth [{}] searched, HALTING NOW.,".format(max_level))
@@ -247,14 +276,21 @@ def bfs_crawler(seed,max_links,max_level):
                         #print(' infobox link')
                         continue
 
+                    # add parent to child's inlinks
+                    # parent's docID is docID of webpage
+                    # childID is link's docID
+                    childID = link.get('href').split('/wiki/')[-1]
+                    if childID in webgraph:
+                        child_inlinks = webgraph[childID]
+                        if docID not in child_inlinks:
+                            webgraph[childID].append(docID)
+
+
                    # if the link is not present in seen/crawled urls, then add it
                    # to frontier (so that it can be processed in the future )
                     if (not present('https://en.wikipedia.org'+str(link.get('href')),crawled_pages)):
                         frontier.append(['https://en.wikipedia.org'+str(link.get('href')),webpage[1]+1])
                         #print('\tFrontier Length : {}'.format(len(frontier)))
-
-
-        ''' 4. download the webpage  ->here or before parsing -> check book pseudo code ASK TA'''
 
         # the webpage is now processed, so it  removed from the frontier
         # and added to list of processed/seen webpages i.e crawled_urls
@@ -299,12 +335,10 @@ if __name__ == "__main__":
 
     print("\n\tCrawling started, please wait for ______ (FILL) time . . . \n")
 
-    crawled_pages= bfs_crawler(seed,50,6)
+    crawled_pages= bfs_crawler(seed,10,6)
     write_urls_to_file(crawled_pages)  # adding unique crawled urls to file
-
     write_pages_to_file(crawled_pages) # adding unique crawled webpages (full info) to txt file
-
+    write_graph_to_file()
+    print_webgraph()
 # downloading the webpage[raw html] for crawled urls
 #  -------- Uncomment this section to download webpages --------
-#download_urls(crawled_urls)
-# --------------------------------------------------------------
