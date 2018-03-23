@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 
 # -------------------------------------------------------------------------
 # Constants required for Crawling and Ranking
-DELAY = 1.2    # Time delay for implementing politeness policy
+DELAY = 1.05    # Time delay for implementing politeness policy
 # -------------------------------------------------------------------------
 
 # global variables -----------------------------------------------------------
@@ -77,7 +77,6 @@ def valid_URL(url_string):
 # Given   : a url string and a list of nodes where node is a list ['url', level]
 # Returns : true iff it the given string is present in the
 def present(s,list):
-    result = False
     # .lower() handels the following SPECIAL case - This is the redirects case - ALREADY HANDLED
     # https://en.wikipedia.org/wiki/Full_Moon and https://en.wikipedia.org/wiki/full_Moon
     # refer to same page
@@ -85,11 +84,10 @@ def present(s,list):
     # refer to the same link and hence must be treated as same.
     # Full_moon page is same as full_moon
     for page in list:
-        if str(page[0]) == s:
-            result = True
+        if str(page[0]).encode('utf-8') == s.encode('utf-8'):
+            return True
             # duplicate hence skip it
-            break
-    return result
+    return False
 
 # -------------------------------------------------------------------------
 
@@ -100,15 +98,16 @@ def download_webpage(url_str,fetched_url):
     filename = os.getcwd()+"/BFS_CrawlDocs/"+url_str.split('/wiki/')[-1] + '.txt'
     if not os.path.exists(filename):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
+        with open(filename, 'wb') as f:
+            for chunk in fetched_url.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+        f.close()
+        print("        DOWNLOADED : "+url_str.split('/wiki/')[-1] + '.txt')
     else:
-        #print('File already present')
-        return ## Don't download this page and move onto next
-    fetched_url = requests.get(url_str, stream=True)
-    with open(filename, 'wb') as f:
-        for chunk in fetched_url.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-    f.close()
+        print("\n - - -  ALREADY DOWNLOADED  - - - - - - "+url_str.split('/wiki/')[-1] + '.txt'+"\n")
+        # Don't download this page and move onto next
+
 
 # ----------------------------------------------------------------------------
 # Given   : given a list of url nodes
@@ -216,6 +215,9 @@ def bfs_crawler(seed,max_links,max_level):
         # crawled/seen/visited/processed, then don't process it further
         # and pop it and move to next page in the frontier
 
+        if (present(webpage[0],crawled_pages)):
+            print("----------Found a match-------")
+
         # 1. Fetch it
         page = requests.get(str(webpage[0]))  # url from node
         webpage[0] = page.url  # base url , even if the page is redirected we end
@@ -226,13 +228,17 @@ def bfs_crawler(seed,max_links,max_level):
         if (len(page.history)>0):
             # check if it is redirecting to an already crawled page
             if (present(webpage[0],crawled_pages)):
+                print("--REDIRECT--"+webpage[0])
                 frontier.pop(0)   # popping this webpage as it has already been crawled
                 continue          # continue to next page in the frontier
         else:  # it is a base page
             # check if this base page has already been crawled
             if (present(webpage[0],crawled_pages)):
+                print(webpage[0])
                 frontier.pop(0)   # popping this webpage as it has already been crawled
                 continue          # continue to next page in the frontier
+
+
 
         #2. Parse it
         parsed_page = BeautifulSoup(page.text, 'html.parser')
@@ -242,18 +248,21 @@ def bfs_crawler(seed,max_links,max_level):
          # all <a> tags inide div with class bodyContent are collected in Links
 
         crawled_pages.append(webpage)  # add to list of processed nodes
+
         print(('\tLink {}'.format(len(crawled_pages)).ljust(10)
         +': {}'.format(crawled_pages[len(crawled_pages)-1][0].split('/wiki/')[-1]).ljust(75)
         +'Level : {}'.format(crawled_pages[len(crawled_pages)-1][1]).ljust(18)))
+
+        '''downloading the webpage[raw html] for crawled urls
+        -------- Uncomment the download_webpage line to download webpages --------
+        '''
+        # 4. download the webpage after it has been crawled
+        download_webpage(str(webpage[0]),page)
 
         docID = str(webpage[0]).split('/wiki/')[-1]
 
         if docID not in webgraph:
             webgraph[docID] = []
-
-        # 4. download the webpage after it has been crawled
-        ##### download_webpage(str(webpage[0]),page)
-
 
         if crawled_pages[len(crawled_pages)-1][1] > max_level:
             print("max-depth [{}] searched, HALTING NOW.,".format(max_level))
@@ -340,5 +349,3 @@ if __name__ == "__main__":
     write_pages_to_file(crawled_pages) # adding unique crawled webpages (full info) to txt file
     write_graph_to_file()
     print_webgraph()
-# downloading the webpage[raw html] for crawled urls
-#  -------- Uncomment this section to download webpages --------

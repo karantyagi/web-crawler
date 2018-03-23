@@ -899,7 +899,6 @@ https://en.wikipedia.org/wiki/Nebular_theory
 https://en.wikipedia.org/wiki/Planetesimal
 https://en.wikipedia.org/wiki/Accretion_(astrophysics)
 https://en.wikipedia.org/wiki/Million_years
-https://en.wikipedia.org/wiki/Working_hypothesis
 https://en.wikipedia.org/wiki/Mars
 https://en.wikipedia.org/wiki/Giant_impact_hypothesis
 https://en.wikipedia.org/wiki/Hoodoo_(geology)
@@ -981,6 +980,7 @@ https://en.wikipedia.org/wiki/List_of_ancient_civilizations
 https://en.wikipedia.org/wiki/Human_impact_on_the_environment
 https://en.wikipedia.org/wiki/Inorganic
 https://en.wikipedia.org/wiki/Carbon_cycle
+https://en.wikipedia.org/wiki/Carbon_dioxide
 https://en.wikipedia.org/wiki/Parts_per_million
 https://en.wikipedia.org/wiki/C4_carbon_fixation
 https://en.wikipedia.org/wiki/Celsius
@@ -998,3 +998,4 @@ https://en.wikipedia.org/wiki/Chimborazo_(volcano)
 https://en.wikipedia.org/wiki/Ecuador
 https://en.wikipedia.org/wiki/Topography
 https://en.wikipedia.org/wiki/Mariana_Trench
+https://en.wikipedia.org/wiki/Mount_Everest
